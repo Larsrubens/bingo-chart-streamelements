@@ -1,0 +1,43 @@
+const CHANNEL_NAME = "Yourtwitch";
+
+function toggleBingoCell(num) {
+  const card = document.getElementById(`cell-${num}`);
+  if (card) {
+    card.classList.toggle('checked');
+  }
+}
+
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj.detail || obj.detail.listener !== 'message') return;
+
+  const data = obj.detail.event.data;
+  if (!data || !data.text) return;
+
+  const message = data.text.trim().toLowerCase();
+  const badges = data.badges || [];
+  
+  const isBroadcaster = badges.some(b => b.type === 'broadcaster');
+  const isMod = badges.some(b => b.type === 'moderator' || b.type === 'lead_moderator');
+  
+  const sender = (data.displayName || data.nick || '').toLowerCase();
+  const isOwner = sender === CHANNEL_NAME.toLowerCase();
+
+  if (!isBroadcaster && !isMod && !isOwner) return;
+
+  if (message.startsWith('!bingo')) {
+    const parts = message.split(' ');
+    if (parts.length > 1) {
+      const num = parseInt(parts[1], 10);
+      if (num >= 1 && num <= 9) {
+        toggleBingoCell(num);
+      }
+    }
+  }
+
+  if (message === '!bingoreset') {
+    for (let i = 1; i <= 9; i++) {
+      const card = document.getElementById(`cell-${i}`);
+      if (card) card.classList.remove('checked');
+    }
+  }
+});
